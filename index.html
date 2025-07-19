@@ -1,0 +1,128 @@
+// Replace the entire 'employeeForm.addEventListener' block with this corrected version.
+
+document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    console.log('Form submission started');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    submitBtn.className = 'bg-gray-400 text-white px-8 py-3 rounded-lg font-medium cursor-not-allowed';
+
+    try {
+        // Collect form data
+        const formData = {
+            givenName: document.getElementById('givenName').value,
+            familyName: document.getElementById('familyName').value,
+            idType: document.querySelector('input[name="idType"]:checked')?.value || 'Not specified',
+            dateOfBirth: document.getElementById('dateOfBirth').value,
+            tfn: document.getElementById('tfn').value,
+            superABN: document.getElementById('superABN').value || 'N/A',
+            superSPIN: document.getElementById('superSPIN').value || 'N/A',
+            superMember: document.getElementById('superMember').value || 'N/A',
+            streetAddress: document.getElementById('streetAddress').value,
+            suburb: document.getElementById('suburb').value,
+            state: document.getElementById('state').value,
+            postcode: document.getElementById('postcode').value,
+            mobilePhone: document.getElementById('mobilePhone').value,
+            homePhone: document.getElementById('homePhone').value || 'N/A',
+            email: document.getElementById('email').value,
+            emergencyName: document.getElementById('emergencyName').value,
+            emergencyRelationship: document.getElementById('emergencyRelationship').value,
+            emergencyPhone: document.getElementById('emergencyPhone').value,
+            rsaStatus: document.querySelector('input[name="rsaStatus"]:checked')?.value || 'Not specified',
+            visaStatus: document.querySelector('input[name="visaStatus"]:checked')?.value || 'Not specified',
+            visaType: document.getElementById('visaType').value || 'N/A',
+            visaExpiry: document.getElementById('visaExpiry').value || 'N/A',
+            startDate: document.getElementById('startDate').value,
+            availability: document.getElementById('availability').value,
+            bankName: document.getElementById('bankName').value,
+            accountName: document.getElementById('accountName').value,
+            bsb: document.getElementById('bsb').value,
+            accountNumber: document.getElementById('accountNumber').value
+        };
+        
+        formData.fullName = formData.givenName + ' ' + formData.familyName;
+        
+        // --- THIS IS THE START OF THE CORRECTED LOGIC ---
+
+        // Create file attachments summary
+        let fileAttachments = '';
+        if (Object.keys(uploadedFiles).length > 0) {
+            fileAttachments += '<h3>Uploaded Files:</h3><ul>';
+            for (const [fileId, fileInfo] of Object.entries(uploadedFiles)) {
+                const fieldName = fileId === 'idPhoto' ? 'Identification Document' : 'RSA Certificate';
+                const fileLink = fileInfo.url ? `<a href="${fileInfo.url}" target="_blank">${fileInfo.fileName}</a>` : `${fileInfo.fileName} (Upload failed)`;
+                fileAttachments += `<li><strong>${fieldName}:</strong> ${fileLink}</li>`;
+            }
+            fileAttachments += '</ul><hr>';
+        }
+
+        // Construct the HTML message body for the email
+        const message_body = `
+            <h2>New Employee Information Submission</h2>
+            <p><strong>Name:</strong> ${formData.fullName}</p>
+            <p><strong>Email:</strong> ${formData.email}</p>
+            <p><strong>Mobile:</strong> ${formData.mobilePhone}</p>
+            <hr>
+            ${fileAttachments}
+            <h3>Personal Information</h3>
+            <ul>
+                <li><strong>Date of Birth:</strong> ${formData.dateOfBirth}</li>
+                <li><strong>Address:</strong> ${formData.streetAddress}, ${formData.suburb}, ${formData.state} ${formData.postcode}</li>
+                <li><strong>TFN:</strong> ${formData.tfn}</li>
+            </ul>
+            <h3>Emergency Contact</h3>
+            <ul>
+                <li><strong>Name:</strong> ${formData.emergencyName}</li>
+                <li><strong>Relationship:</strong> ${formData.emergencyRelationship}</li>
+                <li><strong>Phone:</strong> ${formData.emergencyPhone}</li>
+            </ul>
+            <h3>Work Information</h3>
+            <ul>
+                <li><strong>Visa Status:</strong> ${formData.visaStatus}</li>
+                <li><strong>Visa Type:</strong> ${formData.visaType}</li>
+                <li><strong>Visa Expiry:</strong> ${formData.visaExpiry}</li>
+                <li><strong>RSA Status:</strong> ${formData.rsaStatus}</li>
+                <li><strong>Available Start Date:</strong> ${formData.startDate}</li>
+                <li><strong>Availability:</strong><br>${formData.availability.replace(/\n/g, '<br>')}</li>
+            </ul>
+            <h3>Financial Details</h3>
+            <ul>
+                <li><strong>Bank:</strong> ${formData.bankName}</li>
+                <li><strong>Account Name:</strong> ${formData.accountName}</li>
+                <li><strong>BSB:</strong> ${formData.bsb}</li>
+                <li><strong>Account Number:</strong> ${formData.accountNumber}</li>
+            </ul>
+            <ul>
+                <li><strong>Super Fund ABN:</strong> ${formData.superABN}</li>
+                <li><strong>Super Fund SPIN/USI:</strong> ${formData.superSPIN}</li>
+                <li><strong>Super Member Details:</strong> ${formData.superMember}</li>
+            </ul>
+        `;
+
+        // Set up the parameters for the EmailJS template
+        const templateParams = {
+            from_name: formData.fullName,
+            from_email: formData.email,
+            to_name: 'Chang Yoonho', // This should be your name or the recipient's name
+            subject: `New Employee Information: ${formData.fullName}`,
+            message_body: message_body
+        };
+
+        // Send the email
+        await emailjs.send('service_oc0qw5r', 'template_bi3khcr', templateParams);
+
+        console.log('Email sent successfully!');
+        showSuccessMessage();
+
+    } catch (error) {
+        console.error('Failed to send email:', error);
+        alert('Form submission failed. Please try again or contact administration.\nError: ' + (error.text || error.message));
+    } finally {
+        // Re-enable the submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Employee Information';
+        submitBtn.className = 'bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200';
+    }
+});
