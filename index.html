@@ -328,7 +328,7 @@
 
     <script>
         // Initialize EmailJS
-        emailjs.init('pxPMV9MhBRrIIDzvS');
+        emailjs.init('WkKbBLfFiKljSEo_w');
 
         console.log('EmailJS initialized');
         console.log('Service ID: service_oc0qw5r');
@@ -544,4 +544,61 @@
                 let fileAttachments = '';
                 if (Object.keys(uploadedFiles).length > 0) {
                     fileAttachments = '\n\nUploaded Files:\n';
-                    Object.entries(uploadedFiles).forEach(([fileId, fileInfo
+                                        Object.entries(uploadedFiles).forEach(([fileId, fileInfo]) => {
+                        fileAttachments += `• ${fileInfo.fileName} - ${fileInfo.url || 'uploaded locally'}\n`;
+                    });
+                }
+
+                const message = `
+New employee form submitted:
+
+Name: ${formData.fullName}
+DOB: ${formData.dateOfBirth}
+TFN: ${formData.tfn}
+Address: ${formData.streetAddress}, ${formData.suburb}, ${formData.state}, ${formData.postcode}
+Phone: ${formData.mobilePhone}, Home: ${formData.homePhone || 'N/A'}
+Email: ${formData.email}
+
+Emergency Contact: ${formData.emergencyName} (${formData.emergencyRelationship}) - ${formData.emergencyPhone}
+RSA Status: ${formData.rsaStatus}
+Visa Status: ${formData.visaStatus} ${formData.visaStatus === 'temporary' ? `(${formData.visaType}, expires ${formData.visaExpiry})` : ''}
+Start Date: ${formData.startDate}
+Availability: ${formData.availability}
+
+Bank Details:
+• Bank: ${formData.bankName}
+• Account Name: ${formData.accountName}
+• BSB: ${formData.bsb}
+• Account #: ${formData.accountNumber}
+
+Superannuation:
+• ABN: ${formData.superABN}
+• SPIN/USI: ${formData.superSPIN}
+• Member #: ${formData.superMember}
+${fileAttachments}
+                `;
+
+                // Send via EmailJS
+                await emailjs.send('service_0ndzsge', 'template_69av8wd', {
+                    from_name: formData.fullName,
+                    from_email: formData.email,
+                    message: message
+                });
+
+                console.log('Email sent successfully');
+                showSuccessMessage();
+                document.getElementById('employeeForm').reset();
+                uploadedFiles = {};
+
+            } catch (error) {
+                console.error('Form submission failed:', error);
+                alert('Something went wrong. Please try again or contact admin.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Employee Information';
+                submitBtn.className = 'bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200';
+            }
+        });
+    </script>
+</body>
+</html>
