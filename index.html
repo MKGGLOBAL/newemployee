@@ -541,48 +541,61 @@
                 console.log('All validations passed, creating email content...');
 
                 // Create file attachments summary
-                let fileAttachments = '';
+                let fileAttachmentsHtml = '';
                 if (Object.keys(uploadedFiles).length > 0) {
-                    fileAttachments = '\n\nUploaded Files:\n';
-                                        Object.entries(uploadedFiles).forEach(([fileId, fileInfo]) => {
-                        fileAttachments += `• ${fileInfo.fileName} - ${fileInfo.url || 'uploaded locally'}\n`;
+                    fileAttachmentsHtml = '<h3>Uploaded Files:</h3>';
+                    Object.entries(uploadedFiles).forEach(([fileId, fileInfo]) => {
+                        fileAttachmentsHtml += `
+                            <div style="margin-bottom: 20px;">
+                                <p><strong>${fileInfo.fileName}</strong></p>
+                                <img src="${fileInfo.url}" alt="${fileInfo.fileName}" style="max-width: 300px; height: auto; border: 1px solid #ccc;" />
+                            </div>
+                        `;
                     });
                 }
 
-                const message = `
-New employee form submitted:
+// Now create HTML email body using template literals
 
-Name: ${formData.fullName}
-DOB: ${formData.dateOfBirth}
-TFN: ${formData.tfn}
-Address: ${formData.streetAddress}, ${formData.suburb}, ${formData.state}, ${formData.postcode}
-Phone: ${formData.mobilePhone}, Home: ${formData.homePhone || 'N/A'}
-Email: ${formData.email}
+const messageHtml = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h2>New employee form submitted</h2>
+    <p><strong>Name:</strong> ${formData.fullName}</p>
+    <p><strong>DOB:</strong> ${formData.dateOfBirth}</p>
+    <p><strong>TFN:</strong> ${formData.tfn}</p>
+    <p><strong>Address:</strong> ${formData.streetAddress}, ${formData.suburb}, ${formData.state}, ${formData.postcode}</p>
+    <p><strong>Phone:</strong> ${formData.mobilePhone}, Home: ${formData.homePhone || 'N/A'}</p>
+    <p><strong>Email:</strong> ${formData.email}</p>
 
-Emergency Contact: ${formData.emergencyName} (${formData.emergencyRelationship}) - ${formData.emergencyPhone}
-RSA Status: ${formData.rsaStatus}
-Visa Status: ${formData.visaStatus} ${formData.visaStatus === 'temporary' ? `(${formData.visaType}, expires ${formData.visaExpiry})` : ''}
-Start Date: ${formData.startDate}
-Availability: ${formData.availability}
+    <p><strong>Emergency Contact:</strong> ${formData.emergencyName} (${formData.emergencyRelationship}) - ${formData.emergencyPhone}</p>
+    <p><strong>RSA Status:</strong> ${formData.rsaStatus}</p>
+    <p><strong>Visa Status:</strong> ${formData.visaStatus} ${formData.visaStatus === 'temporary' ? `(${formData.visaType}, expires ${formData.visaExpiry})` : ''}</p>
+    <p><strong>Start Date:</strong> ${formData.startDate}</p>
+    <p><strong>Availability:</strong> ${formData.availability}</p>
 
-Bank Details:
-• Bank: ${formData.bankName}
-• Account Name: ${formData.accountName}
-• BSB: ${formData.bsb}
-• Account #: ${formData.accountNumber}
+    <h3>Bank Details:</h3>
+    <ul>
+      <li>Bank: ${formData.bankName}</li>
+      <li>Account Name: ${formData.accountName}</li>
+      <li>BSB: ${formData.bsb}</li>
+      <li>Account #: ${formData.accountNumber}</li>
+    </ul>
 
-Superannuation:
-• ABN: ${formData.superABN}
-• SPIN/USI: ${formData.superSPIN}
-• Member #: ${formData.superMember}
-${fileAttachments}
-                `;
+    <h3>Superannuation:</h3>
+    <ul>
+      <li>ABN: ${formData.superABN}</li>
+      <li>SPIN/USI: ${formData.superSPIN}</li>
+      <li>Member #: ${formData.superMember}</li>
+    </ul>
+
+    ${fileAttachmentsHtml}
+  </div>
+`;
 
                 // Send via EmailJS
                 await emailjs.send('service_0ndzsge', 'template_69av8wd', {
                     from_name: formData.fullName,
                     from_email: formData.email,
-                    message: message
+                    message: messageHtml
                 });
 
                 console.log('Email sent successfully');
